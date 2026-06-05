@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ezriz — Your PC, commanded by AI</title>
+<meta name="description" content="Ezriz is a screen-aware desktop AI copilot for Windows. One keyboard-driven overlay for Gemini, ChatGPT, Claude, DeepSeek, Kimi and OpenRouter." />
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Hanken+Grotesk:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#050505;
+  --ink:#f4f4f2;
+  --dim:#8c8c88;
+  --dimmer:#54544f;
+  --line:rgba(255,255,255,.12);
+  --line-soft:rgba(255,255,255,.06);
+  --surface:rgba(255,255,255,.022);
+  --maxw:1100px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Hanken Grotesk",system-ui,sans-serif;font-weight:300;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--ink);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.fx{position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:radial-gradient(900px circle at 50% -10%,rgba(255,255,255,.06),transparent 60%)}
+.dots{position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.5;
+  background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:34px 34px;
+  mask-image:radial-gradient(circle at 50% 30%,#000,transparent 75%)}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 26px}
+section{position:relative;z-index:1}
+h1,h2,h3{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;line-height:1.02;letter-spacing:-.025em;margin:0}
+.mono{font-family:"JetBrains Mono",monospace}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim)}
+
+.sidx{font-family:"JetBrains Mono";font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dimmer);
+  display:flex;align-items:center;gap:14px;margin-bottom:46px}
+.sidx::after{content:"";height:1px;flex:1;background:var(--line-soft)}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:50;transition:.4s}
+nav .inner{max-width:var(--maxw);margin:0 auto;padding:18px 26px;display:flex;align-items:center;justify-content:space-between}
+nav.scrolled{background:rgba(5,5,5,.72);backdrop-filter:blur(20px);border-bottom:1px solid var(--line-soft)}
+.logo{display:flex;align-items:center;gap:11px;font-family:"Bricolage Grotesque";font-weight:800;font-size:20px;letter-spacing:-.03em}
+.logo .mark{width:28px;height:28px;border-radius:7px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:800;font-size:15px}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{font-size:14px;color:var(--dim);transition:.25s}
+.nav-links a:hover{color:var(--ink)}
+@media(max-width:740px){.nav-links a:not(.btn){display:none}}
+
+.btn{font-family:"Hanken Grotesk";font-weight:500;font-size:14px;padding:11px 19px;border-radius:9px;
+  border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;transition:.22s;
+  display:inline-flex;align-items:center;gap:9px;white-space:nowrap}
+.btn:hover{border-color:rgba(255,255,255,.4)}
+.btn-primary{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+.btn-primary:hover{background:#fff;transform:translateY(-1px)}
+.btn-lg{padding:15px 26px;font-size:15px}
+
+.hero{padding:188px 0 96px}
+.hero .eyebrow{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border:1px solid var(--line);border-radius:100px;margin-bottom:34px;opacity:0;animation:up .8s .1s forwards}
+.blink{width:6px;height:6px;border-radius:50%;background:var(--ink);animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.hero h1{font-size:clamp(46px,8.5vw,108px);font-weight:800}
+.hero h1 .line{display:block;overflow:hidden}
+.hero h1 .line span{display:inline-block;transform:translateY(112%);animation:reveal 1s cubic-bezier(.16,1,.3,1) forwards}
+.hero h1 .l2 span{animation-delay:.1s}
+.hero h1 .l3 span{animation-delay:.2s}
+.hero h1 .thin{font-weight:500;color:var(--dim)}
+@keyframes reveal{to{transform:translateY(0)}}
+.hero .sub{max-width:540px;margin:34px 0 0;color:var(--dim);font-size:clamp(16px,2vw,19px);opacity:0;animation:up .8s .55s forwards}
+.hero .cta{display:flex;gap:13px;flex-wrap:wrap;margin-top:40px;opacity:0;animation:up .8s .7s forwards}
+.hero .meta{margin-top:24px;font-size:12px;color:var(--dimmer);letter-spacing:.08em;opacity:0;animation:up .8s .85s forwards}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+
+.mock{margin:78px auto 0;max-width:780px;opacity:0;animation:up 1s 1s forwards;perspective:1700px}
+.mock-in{transform:rotateX(12deg);animation:float 8s ease-in-out infinite}
+@keyframes float{0%,100%{transform:rotateX(12deg) translateY(0)}50%{transform:rotateX(9deg) translateY(-12px)}}
+.win{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012));border:1px solid var(--line);
+  border-radius:16px;backdrop-filter:blur(12px);overflow:hidden;box-shadow:0 60px 120px -40px rgba(0,0,0,.9)}
+.win-bar{display:flex;align-items:center;gap:7px;padding:13px 16px;border-bottom:1px solid var(--line-soft)}
+.tl{width:10px;height:10px;border-radius:50%;border:1px solid var(--line)}
+.win-bar .t{margin-left:8px;font-family:"JetBrains Mono";font-size:12px;color:var(--dimmer)}
+.win-body{padding:20px}
+.prow{display:flex;align-items:center;gap:11px;padding:13px 15px;border:1px solid var(--line);border-radius:11px;background:rgba(0,0,0,.4)}
+.prow .k{font-family:"JetBrains Mono";font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:5px;padding:3px 7px}
+.prow .txt{font-size:14px}
+.prow .caret{width:2px;height:15px;background:var(--ink);animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.chips{display:flex;gap:7px;margin:15px 0;flex-wrap:wrap}
+.chip{font-family:"JetBrains Mono";font-size:11px;padding:5px 11px;border-radius:100px;border:1px solid var(--line);color:var(--dim)}
+.chip.on{border-color:var(--ink);color:var(--ink)}
+.resp{padding:15px;border-left:1px solid var(--ink);background:rgba(255,255,255,.02)}
+.resp .l{font-family:"JetBrains Mono";font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
+.resp p{margin:0;font-size:13.5px;color:var(--dim)}
+.resp .step{display:flex;gap:9px;margin-top:8px;font-size:13px;color:var(--dim)}
+.resp .num{font-family:"JetBrains Mono";color:var(--ink);font-size:12px}
+
+.providers{padding:36px 0 80px;border-bottom:1px solid var(--line-soft)}
+.providers .l{font-family:"JetBrains Mono";font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dimmer);margin-bottom:24px;text-align:center}
+.prow2{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.prov{padding:11px 19px;border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--dim);transition:.25s}
+.prov:hover{color:var(--ink);border-color:rgba(255,255,255,.35)}
+
+.head{max-width:640px;margin:0 0 56px}
+.head h2{font-size:clamp(30px,4.4vw,50px);margin-top:16px}
+.head p{color:var(--dim);margin-top:18px;font-size:17px}
+
+.features{padding:120px 0;border-bottom:1px solid var(--line-soft)}
+.feat{display:grid;grid-template-columns:64px 1fr auto;gap:26px;align-items:baseline;padding:34px 0;border-top:1px solid var(--line-soft);transition:.3s}
+.feat:hover{padding-left:10px}
+.feat .n{font-family:"JetBrains Mono";font-size:13px;color:var(--dimmer)}
+.feat h3{font-size:24px;font-weight:700}
+.feat p{color:var(--dim);font-size:15px;margin:10px 0 0;max-width:520px}
+.feat .tag{font-family:"JetBrains Mono";font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dimmer);text-align:right}
+@media(max-width:720px){.feat{grid-template-columns:1fr;gap:8px}.feat .tag{text-align:left}}
+
+.pricing{padding:120px 0;border-bottom:1px solid var(--line-soft)}
+.tiers{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+@media(max-width:720px){.tiers{grid-template-columns:1fr}}
+.tier{padding:40px}
+.tier+.tier{border-left:1px solid var(--line)}
+@media(max-width:720px){.tier+.tier{border-left:none;border-top:1px solid var(--line)}}
+.tier.pro{background:rgba(255,255,255,.025)}
+.tier .tn{display:flex;align-items:center;gap:11px;font-family:"Bricolage Grotesque";font-weight:700;font-size:20px}
+.tier .pill{font-family:"JetBrains Mono";font-size:10px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--ink);border-radius:100px;padding:3px 9px}
+.tier .price{font-family:"Bricolage Grotesque";font-weight:800;font-size:52px;margin:18px 0 4px;letter-spacing:-.04em}
+.tier .price span{font-size:15px;color:var(--dim);font-weight:400;font-family:"Hanken Grotesk"}
+.tier ul{list-style:none;padding:0;margin:26px 0 30px}
+.tier li{display:flex;gap:12px;padding:9px 0;font-size:14.5px;color:var(--dim);border-top:1px solid var(--line-soft)}
+.tier li:first-child{border-top:none}
+.tier li .c{color:var(--ink)}
+.tier .btn{width:100%;justify-content:center}
+
+.account{padding:120px 0 140px}
+.panel{max-width:460px;padding:34px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+.panel.dash{max-width:600px}
+.tabs{display:flex;gap:5px;border:1px solid var(--line);padding:4px;border-radius:11px;margin-bottom:24px}
+.tabs button{flex:1;padding:10px;border:none;background:transparent;color:var(--dim);font-family:"Hanken Grotesk";font-size:14px;font-weight:500;border-radius:8px;cursor:pointer;transition:.2s}
+.tabs button.active{background:var(--ink);color:var(--bg)}
+label{display:block;font-family:"JetBrains Mono";font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dimmer);margin:18px 0 8px}
+.field{position:relative}
+input{width:100%;padding:13px 15px;background:rgba(0,0,0,.4);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-family:"Hanken Grotesk";font-size:15px;transition:.2s}
+input::placeholder{color:var(--dimmer)}
+input:focus{outline:none;border-color:rgba(255,255,255,.5)}
+.field .eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--dimmer);font-size:11px;font-family:"JetBrains Mono"}
+.account .btn-primary{width:100%;justify-content:center;margin-top:26px}
+.msg{margin-top:15px;font-size:13px;padding:11px 14px;border-radius:9px;display:none;font-family:"JetBrains Mono"}
+.msg.show{display:block}
+.msg.err{border:1px solid rgba(255,255,255,.25);color:var(--ink);background:rgba(255,255,255,.04)}
+.msg.ok{border:1px solid var(--ink);color:var(--ink)}
+.banner{max-width:600px;margin-bottom:22px;padding:13px 16px;border-radius:11px;border:1px solid var(--line);font-family:"JetBrains Mono";font-size:12.5px;color:var(--dim);line-height:1.6}
+.dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.dash-head .who{font-size:14px;color:var(--dim)}
+.dash-head .who b{color:var(--ink);font-weight:600}
+.keyitem{margin-bottom:16px}
+.keyitem .r{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.keyitem .pn{font-weight:500;font-size:14.5px}
+.keyitem .st{font-family:"JetBrains Mono";font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dimmer)}
+.keyitem .st.set{color:var(--ink)}
+.hint{font-family:"JetBrains Mono";font-size:11px;color:var(--dimmer);margin-top:20px;line-height:1.7}
+.hidden{display:none!important}
+
+footer{padding:54px 0 40px;border-top:1px solid var(--line-soft)}
+footer .row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+footer p{color:var(--dimmer);font-size:12px;font-family:"JetBrains Mono"}
+
+.reveal{opacity:0;transform:translateY(28px);transition:.9s cubic-bezier(.16,1,.3,1)}
+.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<div class="fx"></div><div class="dots"></div><div class="grain"></div>
+
+<nav id="nav">
+  <div class="inner">
+    <a class="logo" href="#top"><span class="mark">E</span> Ezriz</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#account">Dashboard</a>
+      <a class="btn" href="#account" id="navAuth">Log in</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero" id="top">
+  <div class="wrap">
+    <span class="eyebrow"><span class="blink"></span> For Windows · v1.0</span>
+    <h1>
+      <span class="line l1"><span>Your PC,</span></span>
+      <span class="line l2"><span>commanded</span></span>
+      <span class="line l3"><span class="thin">by AI.</span></span>
+    </h1>
+    <p class="sub">A screen-aware desktop copilot that brings every major model into one keyboard-driven overlay — so it can read your screen and automate your machine.</p>
+    <div class="cta">
+      <button class="btn btn-primary btn-lg">↓ Download for Windows</button>
+      <a class="btn btn-lg" href="#features">How it works</a>
+    </div>
+    <div class="meta mono">FREE · 64-BIT · WIN 10/11 · NO TELEMETRY</div>
+
+    <div class="mock">
+      <div class="mock-in">
+        <div class="win">
+          <div class="win-bar"><span class="tl"></span><span class="tl"></span><span class="tl"></span><span class="t">ezriz — overlay · ⌥space</span></div>
+          <div class="win-body">
+            <div class="prow"><span class="k">⌥␣</span><span class="txt">Read the chart on screen and export it to CSV</span><span class="caret"></span></div>
+            <div class="chips">
+              <span class="chip on">Claude</span><span class="chip">Gemini</span><span class="chip">GPT‑4o</span><span class="chip">DeepSeek</span><span class="chip">+ screen vision</span>
+            </div>
+            <div class="resp">
+              <div class="l">Ezriz · running</div>
+              <p>Captured active window. Detected a quarterly revenue chart.</p>
+              <div class="step"><span class="num">01</span> Read 6 data points via screen vision</div>
+              <div class="step"><span class="num">02</span> Write <span class="mono">revenue_q.csv</span> to ~/Downloads</div>
+              <div class="step"><span class="num">03</span> Open file · done in 1.2s</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="providers reveal">
+  <div class="wrap">
+    <div class="l">Bring your own keys · swap models mid-task</div>
+    <div class="prow2">
+      <div class="prov">Gemini</div><div class="prov">ChatGPT</div><div class="prov">Claude</div>
+      <div class="prov">DeepSeek</div><div class="prov">Kimi</div><div class="prov">OpenRouter</div>
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="sidx">01 — Capabilities</span>
+      <h2>A control layer for your whole machine.</h2>
+      <p>Ezriz sits one keystroke away. It sees your screen, talks to any model, and turns intent into actions on your PC.</p>
+    </div>
+    <div class="reveal">
+      <div class="feat"><span class="n">/01</span><div><h3>Every model, one shortcut.</h3><p>Plug in your own Gemini, OpenAI, Claude, DeepSeek, Kimi and OpenRouter keys and switch between them mid-task. No app-hopping, no lock-in.</p></div><span class="tag">Multi-provider</span></div>
+      <div class="feat"><span class="n">/02</span><div><h3>Screenshot analysis.</h3><p>Capture any window or region and let the model read it — charts, errors, docs, UI. Ask about exactly what you're looking at.</p></div><span class="tag">Screen vision</span></div>
+      <div class="feat"><span class="n">/03</span><div><h3>Actions, not just answers.</h3><p>Chain prompts into real tasks: rename files, draft replies, run scripts, reshape data. Ezriz executes locally on your machine.</p></div><span class="tag">Automation</span></div>
+      <div class="feat"><span class="n">/04</span><div><h3>Built for keyboard-first people.</h3><p>A global hotkey summons the overlay over any app. Command palettes, saved prompts and per-app context, all driveable without the mouse.</p></div><span class="tag">Keyboard-native</span></div>
+      <div class="feat"><span class="n">/05</span><div><h3>Your keys, your data.</h3><p>Keys live under your account with row-level security and are fetched only by your signed-in client. No telemetry, no prompt logging.</p></div><span class="tag">Private</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="sidx">02 — Pricing</span>
+      <h2>Start free. Upgrade when it's indispensable.</h2>
+      <p>You bring your own model keys — so you only ever pay providers for what you use.</p>
+    </div>
+    <div class="tiers reveal">
+      <div class="tier">
+        <div class="tn">Free</div>
+        <div class="price">$0<span> / forever</span></div>
+        <ul>
+          <li><span class="c">→</span> 1 AI provider connected</li>
+          <li><span class="c">→</span> Screenshot analysis</li>
+          <li><span class="c">→</span> Global overlay hotkey</li>
+          <li><span class="c">→</span> 25 automations / day</li>
+          <li><span class="c">→</span> Community support</li>
+        </ul>
+        <button class="btn">Download free</button>
+      </div>
+      <div class="tier pro">
+        <div class="tn">Pro <span class="pill">Popular</span></div>
+        <div class="price">$12<span> / month</span></div>
+        <ul>
+          <li><span class="c">→</span> All 6 providers + model routing</li>
+          <li><span class="c">→</span> Unlimited automations & workflows</li>
+          <li><span class="c">→</span> Custom command palettes & macros</li>
+          <li><span class="c">→</span> Per-app context profiles</li>
+          <li><span class="c">→</span> Priority support & early features</li>
+        </ul>
+        <button class="btn btn-primary">Go Pro</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="account" id="account">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="sidx">03 — Your account</span>
+      <h2 id="acctTitle">Create an account. Sign in from the app.</h2>
+      <p>Sign up here and add your provider keys. The desktop app logs in with the same credentials and pulls them down securely.</p>
+    </div>
+
+    <div id="cfgBanner" class="banner hidden"></div>
+
+    <div class="panel reveal" id="authPanel">
+      <div class="tabs">
+        <button id="tabSignup" class="active" onclick="setMode('signup')">Sign up</button>
+        <button id="tabLogin" onclick="setMode('login')">Log in</button>
+      </div>
+      <label>Email</label>
+      <div class="field"><input id="email" type="email" placeholder="you@domain.dev" autocomplete="email"></div>
+      <label>Password</label>
+      <div class="field">
+        <input id="password" type="password" placeholder="••••••••••" autocomplete="new-password">
+        <span class="eye" onclick="togglePw('password',this)">SHOW</span>
+      </div>
+      <button class="btn btn-primary" id="authBtn" onclick="doAuth()">Create account</button>
+      <div class="msg" id="authMsg"></div>
+    </div>
+
+    <div class="panel dash hidden" id="dashPanel">
+      <div class="dash-head">
+        <div class="who">Signed in as <b id="userEmail">—</b></div>
+        <button class="btn" onclick="signOut()">Log out</button>
+      </div>
+      <div class="keyitem"><div class="r"><span class="pn">Gemini</span><span class="st" id="st-gemini">not set</span></div><div class="field"><input id="key-gemini" type="password" placeholder="AIza…"><span class="eye" onclick="togglePw('key-gemini',this)">SHOW</span></div></div>
+      <div class="keyitem"><div class="r"><span class="pn">OpenAI</span><span class="st" id="st-openai">not set</span></div><div class="field"><input id="key-openai" type="password" placeholder="sk-…"><span class="eye" onclick="togglePw('key-openai',this)">SHOW</span></div></div>
+      <div class="keyitem"><div class="r"><span class="pn">Claude</span><span class="st" id="st-claude">not set</span></div><div class="field"><input id="key-claude" type="password" placeholder="sk-ant-…"><span class="eye" onclick="togglePw('key-claude',this)">SHOW</span></div></div>
+      <div class="keyitem"><div class="r"><span class="pn">Kimi</span><span class="st" id="st-kimi">not set</span></div><div class="field"><input id="key-kimi" type="password" placeholder="key…"><span class="eye" onclick="togglePw('key-kimi',this)">SHOW</span></div></div>
+      <div class="keyitem"><div class="r"><span class="pn">OpenRouter</span><span class="st" id="st-openrouter">not set</span></div><div class="field"><input id="key-openrouter" type="password" placeholder="sk-or-…"><span class="eye" onclick="togglePw('key-openrouter',this)">SHOW</span></div></div>
+      <div class="keyitem"><div class="r"><span class="pn">DeepSeek</span><span class="st" id="st-deepseek">not set</span></div><div class="field"><input id="key-deepseek" type="password" placeholder="sk-…"><span class="eye" onclick="togglePw('key-deepseek',this)">SHOW</span></div></div>
+      <button class="btn btn-primary" onclick="saveKeys()">Save keys</button>
+      <div class="msg" id="dashMsg"></div>
+      <div class="hint">These keys are stored under your account only. The desktop app retrieves them after you log in with the same email and password.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap"><div class="row">
+    <a class="logo" href="#top"><span class="mark">E</span> Ezriz</a>
+    <p>© 2026 EZRIZ · DESKTOP AI COPILOT · BRING YOUR OWN KEYS</p>
+  </div></div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://axtttpasrktqaptymilb.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_w0FP2jtkjpHPTALfFLlX-w_LCbxlqp7"; // Settings → API → anon public
+
+const PROVIDERS = ["gemini","openai","claude","kimi","openrouter","deepseek"];
+let sb=null, mode="signup";
+const configured = SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith("PASTE_");
+
+if(configured && window.supabase){ sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+else{ const b=document.getElementById("cfgBanner"); b.classList.remove("hidden");
+  b.textContent="⚠ Add your anon/public key to SUPABASE_ANON_KEY and run the SQL in the file header. UI works; auth is disabled until then."; }
+
+function setMode(m){ mode=m;
+  document.getElementById("tabSignup").classList.toggle("active",m==="signup");
+  document.getElementById("tabLogin").classList.toggle("active",m==="login");
+  document.getElementById("authBtn").textContent = m==="signup"?"Create account":"Log in";
+  document.getElementById("password").autocomplete = m==="signup"?"new-password":"current-password";
+  hideMsg("authMsg");
+}
+function togglePw(id,el){ const f=document.getElementById(id); const s=f.type==="password"; f.type=s?"text":"password"; el.textContent=s?"HIDE":"SHOW"; }
+function showMsg(id,t,ok){ const m=document.getElementById(id); m.textContent=t; m.className="msg show "+(ok?"ok":"err"); }
+function hideMsg(id){ document.getElementById(id).className="msg"; }
+
+async function doAuth(){
+  if(!sb){ showMsg("authMsg","Supabase not configured yet.",false); return; }
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  if(!email||!password){ showMsg("authMsg","Enter an email and password.",false); return; }
+  const btn=document.getElementById("authBtn"); btn.disabled=true; btn.textContent="…";
+  try{
+    if(mode==="signup"){
+      const {error}=await sb.auth.signUp({email,password}); if(error) throw error;
+      showMsg("authMsg","Account created. Confirm via email, then log in.",true); setMode("login");
+    } else {
+      const {error}=await sb.auth.signInWithPassword({email,password}); if(error) throw error;
+      await enterDashboard();
+    }
+  }catch(e){ showMsg("authMsg",e.message||"Authentication failed.",false); }
+  finally{ btn.disabled=false; btn.textContent=mode==="signup"?"Create account":"Log in"; }
+}
+async function signOut(){
+  if(sb) await sb.auth.signOut();
+  document.getElementById("dashPanel").classList.add("hidden");
+  document.getElementById("authPanel").classList.remove("hidden");
+  document.getElementById("acctTitle").textContent="Create an account. Sign in from the app.";
+  document.getElementById("navAuth").textContent="Log in";
+  PROVIDERS.forEach(p=>document.getElementById("key-"+p).value="");
+  ["email","password"].forEach(id=>document.getElementById(id).value="");
+}
+async function enterDashboard(){
+  const {data}=await sb.auth.getUser(); if(!data||!data.user) return;
+  document.getElementById("authPanel").classList.add("hidden");
+  document.getElementById("dashPanel").classList.remove("hidden");
+  document.getElementById("userEmail").textContent=data.user.email;
+  document.getElementById("acctTitle").textContent="Your API keys.";
+  document.getElementById("navAuth").textContent="Dashboard";
+  hideMsg("authMsg"); await loadKeys(data.user.id);
+}
+async function loadKeys(uid){
+  const {data,error}=await sb.from("user_api_keys").select("*").eq("user_id",uid).maybeSingle();
+  if(error){ showMsg("dashMsg","Couldn't load keys: "+error.message,false); return; }
+  if(data) PROVIDERS.forEach(p=>{ const v=data[p+"_key"]; if(v){ document.getElementById("key-"+p).value=v; const s=document.getElementById("st-"+p); s.textContent="set"; s.classList.add("set"); } });
+}
+async function saveKeys(){
+  const {data:u}=await sb.auth.getUser(); if(!u||!u.user){ showMsg("dashMsg","Session expired — log in again.",false); return; }
+  const payload={user_id:u.user.id, updated_at:new Date().toISOString()};
+  PROVIDERS.forEach(p=> payload[p+"_key"]=document.getElementById("key-"+p).value.trim()||null );
+  const {error}=await sb.from("user_api_keys").upsert(payload,{onConflict:"user_id"});
+  if(error){ showMsg("dashMsg","Save failed: "+error.message,false); return; }
+  PROVIDERS.forEach(p=>{ const s=document.getElementById("st-"+p); if(payload[p+"_key"]){s.textContent="set";s.classList.add("set");}else{s.textContent="not set";s.classList.remove("set");} });
+  showMsg("dashMsg","Keys saved to your account.",true);
+}
+(async()=>{ if(sb){ const {data}=await sb.auth.getSession(); if(data&&data.session) await enterDashboard(); } })();
+
+addEventListener("scroll",()=>document.getElementById("nav").classList.toggle("scrolled",scrollY>20));
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
